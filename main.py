@@ -1,18 +1,21 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from engine import Engine
+from pydantic import BaseModel
 
 app = FastAPI()
-engine = Engine()
 
-# WordPress izin versin diye (çok önemli)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+class Patient(BaseModel):
+    crp: float
+    calprotectin: float
+    blood_in_stool: bool
 
 @app.post("/analyze")
-def analyze(data: dict):
-    return engine.evaluate(data)
+def analyze(p: Patient):
+    risk = "low"
+
+    if p.crp > 50 or p.calprotectin > 300:
+        risk = "high"
+
+    if p.blood_in_stool:
+        risk = "high"
+
+    return {"risk": risk}
